@@ -1,0 +1,31 @@
+:source-highlighter: highlightjs
+:imagesdir: images
+
+= Moleculer tests sandbox
+
+**Pre-requisites**: a POSIX platform with `bash`, `docker` and `docker-compose`.
+
+To launch the services and test a request:
+
+[source,sh]
+----
+./init.sh
+docker-compose up
+docker run --rm -it --network=moleculer-tests_default alpine wget -q -O - \
+  "http://gateway:10000/calculator/add?left=19&right=23" && echo
+----
+
+In order to connect to the Mongo UI, the Jaeger UI or the gateway directly from your host, get the published ports:
+
+[source,sh]
+----
+docker-compose port mongoui 8081
+docker-compose port jaeger 16686
+docker-compose port gateway 10000
+----
+
+Or simply issue `docker-compose ps`.
+
+Here is a snapshot of the current Jaeger UI after a request:
+
+image::jaeger.png[]

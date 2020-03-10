@@ -1,0 +1,79 @@
+version: "3.7"
+
+networks:
+  back:
+
+x-dev-defaults: &dev
+  image: node:13.10.1-alpine3.11
+  working_dir: /home/${LOGNAME}/dev
+  user: ${UID}:${GID}
+  command: ["npm", "start"]
+
+services:
+  nats:
+    image: nats:2.1.2-alpine3.10
+    networks:
+      back: {}
+    command:
+      - "nats-server"
+      - "--cluster"
+      - "nats://0.0.0.0:6222"
+      - "--routes=nats://ruser:T0pS3cr3t@nats:6222"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.17
+    ports:
+      - 16686
+
+  mongo:
+    image: mongo:4.2.2-bionic
+    networks:
+      back: {}
+
+  mongoui:
+    image: mongo-express:0.49.0
+    networks:
+      back: {}
+    ports:
+      - 8081
+
+  db:
+    <<: *dev
+    depends_on:
+      - nats
+      - mongo
+    networks:
+      back: {}
+    environment:
+      npm_config_cache: /tmp/npm
+    volumes:
+      - ./.passwd:/etc/passwd
+      - ./db:/home/${LOGNAME}/dev
+
+  service:
+    <<: *dev
+    depends_on:
+      - nats
+    networks:
+      back: {}
+    environment:
+      npm_config_cache: /tmp/npm
+    volumes:
+      - ./.passwd:/etc/passwd
+      - ./service:/home/${LOGNAME}/dev
+
+  gateway:
+    <<: *dev
+    depends_on:
+      - nats
+    networks:
+      default: {}
+      back: {}
+    environment:
+      npm_config_cache: /tmp/npm
+      PORT: 10000
+    ports:
+      - 10000
+    volumes:
+      - ./.passwd:/etc/passwd
+      - ./gateway:/home/${LOGNAME}/dev
