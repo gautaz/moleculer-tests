@@ -22,6 +22,9 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.17
+    networks:
+      default: {}
+      back: {}
     ports:
       - 16686
 
